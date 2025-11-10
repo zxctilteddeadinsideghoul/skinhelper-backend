@@ -1,11 +1,11 @@
 from typing import Optional, List
 from .common import APIModel
-from ingredient import IngredientSchema
-from brand import BrandSchema
-from category import CategorySchema
-from skin_type import SkinTypeSchema
-from concern import ConcernSchema
-from tag import TagSchema
+from .ingredient import IngredientSchema
+from .brand import BrandSchema
+from .category import CategorySchema
+from .skin_type import SkinTypeSchema
+from .concern import ConcernSchema
+from .tag import TagSchema
 
 
 class ProductBase(APIModel):
@@ -40,9 +40,6 @@ class ProductShort(ProductBase):
     brand: Optional[BrandSchema] = None
     category: Optional[CategorySchema] = None
 
-    class Config:
-        orm_mode = True
-
 
 class ProductDetailed(ProductShort):
     """Детализированная схема продукта (как в твоём примере JSON)."""
@@ -50,6 +47,3 @@ class ProductDetailed(ProductShort):
     suitable_for_skin_types: List[SkinTypeSchema] = []
     targets_concerns: List[ConcernSchema] = []
     tags: List[TagSchema] = []
-
-    class Config:
-        orm_mode = True
