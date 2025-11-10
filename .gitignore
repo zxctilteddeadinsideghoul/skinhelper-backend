@@ -1,0 +1,83 @@
+# === Python ===
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyo
+*.pyd
+
+# === Virtual environments ===
+venv/
+.env/
+.venv/
+env/
+ENV/
+
+# === IDE/Editor files ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === Logs and temp files ===
+*.log
+*.out
+*.err
+logs/
+tmp/
+*.bak
+*.tmp
+
+# === OS specific ===
+.DS_Store
+Thumbs.db
+
+# === Python packaging ===
+build/
+dist/
+*.egg-info/
+.eggs/
+
+# === Byte-compiled / compiled files ===
+*.so
+*.dll
+*.dylib
+
+# === Testing ===
+.coverage
+htmlcov/
+.tox/
+pytest_cache/
+.cache/
+
+# === FastAPI / Uvicorn ===
+# (если генерируются временные файлы при запуске)
+uvicorn.log
+
+# === Environment & configuration ===
+.env.local
+.env.prod
+.env.dev
+.env.test
+
+# === Alembic (миграции БД) ===
+# сохраняем папку alembic/ но игнорируем кэш и временные файлы
+alembic/__pycache__/
+alembic/versions/__pycache__/
+
+# === MyPy / Type Checking ===
+.mypy_cache/
+.dmypy.json
+.pyre/
+.pytype/
+
+# === Jupyter (если используешь для экспериментов) ===
+.ipynb_checkpoints/
+
+# === Docker ===
+*.pid
+*.tar
+docker-compose.override.yml
+
+# === SQLite (если используется локально) ===
+*.db
+*.sqlite3
