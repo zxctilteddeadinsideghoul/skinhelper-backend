@@ -63,6 +63,7 @@ uvicorn.log
 # сохраняем папку alembic/ но игнорируем кэш и временные файлы
 alembic/__pycache__/
 alembic/versions/__pycache__/
+alembic/versions/
 
 # === MyPy / Type Checking ===
 .mypy_cache/

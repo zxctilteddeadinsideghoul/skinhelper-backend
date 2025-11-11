@@ -111,8 +111,8 @@ class Product(DeclBase):
     image_url: Mapped[str] = mapped_column(sa.String(300), nullable=True)
     volume_ml: Mapped[int] = mapped_column(sa.Integer, nullable=True)
 
-    brand_id: Mapped[int] = mapped_column(sa.ForeignKey("brands.id"), nullable=False)
-    category_id: Mapped[int] = mapped_column(sa.ForeignKey("categories.id"), nullable=False)
+    brand_id: Mapped[int] = mapped_column(sa.ForeignKey("brands.id"), nullable=True)
+    category_id: Mapped[int] = mapped_column(sa.ForeignKey("categories.id"), nullable=True)
 
     brand: Mapped["Brand"] = relationship("Brand", back_populates="products")
     category: Mapped["Category"] = relationship("Category", back_populates="products")
