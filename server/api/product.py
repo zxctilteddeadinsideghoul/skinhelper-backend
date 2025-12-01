@@ -6,7 +6,7 @@ from sqlalchemy.orm import joinedload, selectinload, Session
 
 from db import Product, Brand, Category, Ingredient, SkinType, Concern, Tag
 from db.session import session
-from ..schemas.product import ProductCreate, ProductUpdate, ProductShort
+from ..schemas.product import ProductCreate, ProductUpdate, ProductShort, ProductDetailed
 
 router = APIRouter(prefix="/products", tags=["Products"])
 
@@ -38,19 +38,44 @@ def _assign_m2m(
     setattr(product_instance, attr_name, objs)
 
 
-@router.get("/", response_model=List[ProductShort])
+@router.get("/all", response_model=List[ProductShort])
 def get_all_products():
     with session() as s:
         products = (
             s.query(Product)
             .options(
-                joinedload(Product.brand),
-                joinedload(Product.category),
+                selectinload(Product.brand),
+                selectinload(Product.category),
             )
             .all()
         )
 
         return products
+
+from fastapi import HTTPException
+from sqlalchemy.orm import selectinload
+
+@router.get("/{product_id}", response_model=ProductDetailed)
+def get_product_detailed(product_id: int):
+    with session() as s:
+        product = (
+            s.query(Product)
+            .options(
+                selectinload(Product.brand),
+                selectinload(Product.category),
+                selectinload(Product.ingredients),
+                selectinload(Product.suitable_for_skin_types),
+                selectinload(Product.targets_concerns),
+                selectinload(Product.tags),
+            )
+            .filter(Product.id == product_id)
+            .first()
+        )
+
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        return product
 
 
 @router.post("/", response_model=ProductShort, status_code=status.HTTP_201_CREATED)

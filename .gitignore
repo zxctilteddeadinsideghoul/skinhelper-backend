@@ -42,6 +42,7 @@ dist/
 *.dll
 *.dylib
 
+
 # === Testing ===
 .coverage
 htmlcov/
