@@ -6,6 +6,7 @@ class Config(BaseSettings):
     DB_PASSWORD: str = "nF8da6ku7zih!"
     DB_PORT: str = "5464"
     DB_NAME: str = "skinhelper"
+    DB_HOST: str = "localhost"
 
     ECHO: bool = False
 
