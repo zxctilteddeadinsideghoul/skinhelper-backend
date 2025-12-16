@@ -32,6 +32,10 @@ class ProductUpdate(ProductBase):
     tag_ids: Optional[List[int]] = None
 
 
+class ProductName(ProductBase):
+    name: str
+
+
 class ProductShort(ProductBase):
     id: int
     brand: Optional[BrandSchema] = None

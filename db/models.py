@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from typing import List
 
 from db import DeclBase
+from core.enums import SafetyLevel
 
 
 product_ingredients = sa.Table(
@@ -58,6 +59,19 @@ class Ingredient(DeclBase):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100), unique=True, nullable=False)
     purpose: Mapped[str] = mapped_column(sa.Text, nullable=True)
+
+    safety_level: Mapped[SafetyLevel] = mapped_column(
+        sa.Enum(
+            SafetyLevel,
+            name="safety_level_enum",
+        ),
+        nullable=False,
+        server_default=SafetyLevel.safe.value,
+    )
+
+    max_concentration: Mapped[int] = mapped_column(sa.Integer, nullable=True)
+    carcinogenicity: Mapped[int] = mapped_column(sa.Integer, nullable=True)
+    allergenicity: Mapped[int] = mapped_column(sa.Integer, nullable=True)
 
     products: Mapped[List["Product"]] = relationship(
         secondary=product_ingredients,

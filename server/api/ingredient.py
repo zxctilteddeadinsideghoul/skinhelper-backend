@@ -38,7 +38,11 @@ def create_ingredient(ingredient_data: IngredientCreate):
         try:
             new_ingredient = Ingredient(
                 name=ingredient_data.name,
-                purpose=ingredient_data.purpose
+                purpose=ingredient_data.purpose,
+                safety_level=ingredient_data.safety_level,
+                max_concentration=ingredient_data.max_concentration,
+                carcinogenicity=ingredient_data.carcinogenicity,
+                allergenicity=ingredient_data.allergenicity,
             )
             db.add(new_ingredient)
             db.flush()
@@ -66,6 +70,13 @@ def update_ingredient(ingredient_id: int, ingredient_data: IngredientUpdate):
                 ingredient.name = ingredient_data.name
             if ingredient_data.purpose is not None:
                 ingredient.purpose = ingredient_data.purpose
+            ingredient.safety_level = ingredient_data.safety_level
+            if ingredient_data.max_concentration is not None:
+                ingredient.max_concentration = ingredient_data.max_concentration
+            if ingredient_data.carcinogenicity is not None:
+                ingredient.carcinogenicity = ingredient_data.carcinogenicity
+            if ingredient_data.allergenicity is not None:
+                ingredient.allergenicity = ingredient_data.allergenicity
             db.flush()
             return ingredient
         except IntegrityError:
