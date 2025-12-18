@@ -59,7 +59,7 @@ def get_all_products(
 
     # Pagination
     skip: int = Query(0, ge=0, description="Number of records to skip"),
-    limit: int = Query(50, ge=1, le=100, description="Maximum number of records to return (1-100)"),
+    limit: Optional[int] = Query(None, description="Maximum number of records to return"),
 ):
     # Parameter validation
     if category_id and category:
@@ -76,38 +76,31 @@ def get_all_products(
             )
 
     with session() as s:
-        # Base query with eager loading for ProductShort response
         query = s.query(Product).options(
             selectinload(Product.brand),
             selectinload(Product.category),
         )
 
-        # Apply unified search if provided
         if search:
-            # Search across multiple fields with OR conditions
             search_filter = (
                 Product.name.ilike(f"%{search}%") |
                 Brand.name.ilike(f"%{search}%") |
                 Category.name.ilike(f"%{search}%") |
                 Ingredient.name.ilike(f"%{search}%")
             )
-            # Use outer joins to include products even if some relationships are null
             query = query.outerjoin(Product.brand).outerjoin(Product.category).outerjoin(Product.ingredients).filter(search_filter)
 
-        # Apply legacy filters (for backward compatibility)
         elif name or brand:
             if name:
                 query = query.filter(Product.name.ilike(f"%{name}%"))
             if brand:
                 query = query.join(Product.brand).filter(Brand.name.ilike(f"%{brand}%"))
 
-        # Apply category filters
         if category_id:
             query = query.filter(Product.category_id == category_id)
         elif category:
             query = query.join(Product.category).filter(Category.name.ilike(f"%{category}%"))
 
-        # Apply many-to-many filters with DISTINCT to avoid duplicates
         if skin_type_ids:
             query = query.join(Product.suitable_for_skin_types).filter(SkinType.id.in_(skin_type_ids))
 
@@ -120,12 +113,13 @@ def get_all_products(
         if ingredient_ids:
             query = query.join(Product.ingredients).filter(Ingredient.id.in_(ingredient_ids))
 
-        # Apply DISTINCT for many-to-many relationships to avoid duplicate products
         if any([skin_type_ids, concern_ids, tag_ids, ingredient_ids]):
             query = query.distinct(Product.id)
-
-        # Apply pagination
-        query = query.offset(skip).limit(limit)
+        
+        if limit:
+            query = query.offset(skip).limit(limit)
+        else:
+            query = query.offset(skip)
 
         products = query.all()
         return products
@@ -159,7 +153,6 @@ def get_product_detailed(product_id: int):
 @router.post("/", response_model=ProductShort, status_code=status.HTTP_201_CREATED)
 def create_product(product_in: ProductCreate) -> ProductShort:
     with session() as s:
-        # Validate foreign key references
         if product_in.brand_id:
             _ensure_exists(s, Brand, product_in.brand_id, "Brand")
 
@@ -204,24 +197,20 @@ def create_product(product_in: ProductCreate) -> ProductShort:
 @router.put("/{product_id}", response_model=ProductShort)
 def update_product(product_id: int, product_in: ProductUpdate):
     with session() as s:
-        # Check if product exists
         product = s.get(Product, product_id)
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        # Validate foreign key references
         if product_in.brand_id is not None:
             _ensure_exists(s, Brand, product_in.brand_id, "Brand")
 
         if product_in.category_id is not None:
             _ensure_exists(s, Category, product_in.category_id, "Category")
 
-        # Update basic fields if provided
         update_data = product_in.model_dump(exclude_unset=True, exclude={"ingredient_ids", "skin_type_ids", "concern_ids", "tag_ids"})
         for field, value in update_data.items():
             setattr(product, field, value)
 
-        # Update many-to-many relationships if provided
         if product_in.ingredient_ids is not None:
             _assign_m2m(s, product, "ingredients", Ingredient, product_in.ingredient_ids)
         if product_in.skin_type_ids is not None:
@@ -239,7 +228,6 @@ def update_product(product_id: int, product_in: ProductUpdate):
                 status_code=400, detail="Product with this name already exists"
             )
 
-        # Return updated product with relationships loaded
         product = (
             s.query(Product)
             .options(
