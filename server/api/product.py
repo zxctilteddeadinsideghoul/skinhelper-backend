@@ -113,6 +113,9 @@ def get_all_products(
         if ingredient_ids:
             query = query.join(Product.ingredients).filter(Ingredient.id.in_(ingredient_ids))
 
+        # Добавляем сортировку по ID для корректной работы distinct и предсказуемого порядка
+        query = query.order_by(Product.id)
+        
         if any([skin_type_ids, concern_ids, tag_ids, ingredient_ids]):
             query = query.distinct(Product.id)
         
