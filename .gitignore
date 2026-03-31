@@ -55,6 +55,7 @@ pytest_cache/
 uvicorn.log
 
 # === Environment & configuration ===
+.env
 .env.local
 .env.prod
 .env.dev

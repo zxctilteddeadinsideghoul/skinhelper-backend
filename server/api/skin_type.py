@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
 from db import SkinType
 from db.session import session
+from ..auth import require_api_token
 from ..schemas.skin_type import SkinTypeCreate, SkinTypeUpdate, SkinTypeSchema
 
 router = APIRouter(prefix="/skin-types", tags=["Skin Types"])
@@ -31,7 +32,12 @@ def get_skin_type(skin_type_id: int):
         return skin_type
 
 
-@router.post("/", response_model=SkinTypeSchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=SkinTypeSchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_token)],
+)
 def create_skin_type(skin_type_data: SkinTypeCreate):
     """Create a new skin type."""
     with session() as db:
@@ -47,7 +53,11 @@ def create_skin_type(skin_type_data: SkinTypeCreate):
             )
 
 
-@router.put("/{skin_type_id}", response_model=SkinTypeSchema)
+@router.put(
+    "/{skin_type_id}",
+    response_model=SkinTypeSchema,
+    dependencies=[Depends(require_api_token)],
+)
 def update_skin_type(skin_type_id: int, skin_type_data: SkinTypeUpdate):
     """Update an existing skin type."""
     with session() as db:
@@ -69,7 +79,11 @@ def update_skin_type(skin_type_id: int, skin_type_data: SkinTypeUpdate):
             )
 
 
-@router.delete("/{skin_type_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{skin_type_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_token)],
+)
 def delete_skin_type(skin_type_id: int):
     """Delete a skin type."""
     with session() as db:

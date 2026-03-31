@@ -1,11 +1,12 @@
 from typing import Any, List, Optional, Type
 
-from fastapi import APIRouter, HTTPException, Query, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import joinedload, selectinload, Session
 
 from db import Product, Brand, Category, Ingredient, SkinType, Concern, Tag
 from db.session import session
+from ..auth import require_api_token
 from ..schemas.product import ProductCreate, ProductUpdate, ProductShort, ProductDetailed
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -112,8 +113,6 @@ def get_all_products(
 
         if ingredient_ids:
             query = query.join(Product.ingredients).filter(Ingredient.id.in_(ingredient_ids))
-
-        # Добавляем сортировку по ID для корректной работы distinct и предсказуемого порядка
         query = query.order_by(Product.id)
         
         if any([skin_type_ids, concern_ids, tag_ids, ingredient_ids]):
@@ -153,7 +152,12 @@ def get_product_detailed(product_id: int):
         return product
 
 
-@router.post("/", response_model=ProductShort, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=ProductShort,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_token)],
+)
 def create_product(product_in: ProductCreate) -> ProductShort:
     with session() as s:
         if product_in.brand_id:
@@ -197,7 +201,11 @@ def create_product(product_in: ProductCreate) -> ProductShort:
         return product
 
 
-@router.put("/{product_id}", response_model=ProductShort)
+@router.put(
+    "/{product_id}",
+    response_model=ProductShort,
+    dependencies=[Depends(require_api_token)],
+)
 def update_product(product_id: int, product_in: ProductUpdate):
     with session() as s:
         product = s.get(Product, product_id)
@@ -242,3 +250,17 @@ def update_product(product_id: int, product_in: ProductUpdate):
         )
 
         return product
+
+
+@router.delete(
+    "/{product_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_token)],
+)
+def delete_product(product_id: int):
+    with session() as s:
+        product = s.get(Product, product_id)
+        if not product:
+            raise HTTPException(status_code=404, detail="Product not found")
+
+        s.delete(product)

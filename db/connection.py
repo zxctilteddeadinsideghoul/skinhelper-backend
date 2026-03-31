@@ -32,6 +32,11 @@ def _build_postgres_url() -> str:
     return f"postgresql://{user}:{password_enc}@{host}:{port}/{dbname}"
 
 
+def get_database_url() -> str:
+    """Возвращает URL подключения к PostgreSQL из общей конфигурации приложения."""
+    return _build_postgres_url()
+
+
 def start_db_connections(engine_factory=_make_engine) -> None:
     """Инициализация подключения к БД."""
     global _db_engine, _session_factory
@@ -39,7 +44,7 @@ def start_db_connections(engine_factory=_make_engine) -> None:
     if _db_engine:
         raise RuntimeError("DB connection is already initialized")
 
-    db_url = _build_postgres_url()
+    db_url = get_database_url()
 
     if not db_url.startswith("postgresql"):
         _db_url_error()

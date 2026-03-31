@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
 from db import Brand
 from db.session import session
+from ..auth import require_api_token
 from ..schemas.brand import BrandCreate, BrandUpdate, BrandSchema
 
 router = APIRouter(prefix="/brands", tags=["Brands"])
@@ -31,7 +32,12 @@ def get_brand(brand_id: int):
         return brand
 
 
-@router.post("/", response_model=BrandSchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=BrandSchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_token)],
+)
 def create_brand(brand_data: BrandCreate):
     """Create a new brand."""
     with session() as db:
@@ -47,7 +53,11 @@ def create_brand(brand_data: BrandCreate):
             )
 
 
-@router.put("/{brand_id}", response_model=BrandSchema)
+@router.put(
+    "/{brand_id}",
+    response_model=BrandSchema,
+    dependencies=[Depends(require_api_token)],
+)
 def update_brand(brand_id: int, brand_data: BrandUpdate):
     """Update an existing brand."""
     with session() as db:
@@ -69,7 +79,11 @@ def update_brand(brand_id: int, brand_data: BrandUpdate):
             )
 
 
-@router.delete("/{brand_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{brand_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_token)],
+)
 def delete_brand(brand_id: int):
     """Delete a brand."""
     with session() as db:

@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
 from db import Ingredient
 from db.session import session
+from ..auth import require_api_token
 from ..schemas.ingredient import IngredientCreate, IngredientUpdate, IngredientSchema
 
 router = APIRouter(prefix="/ingredients", tags=["Ingredients"])
@@ -31,7 +32,12 @@ def get_ingredient(ingredient_id: int):
         return ingredient
 
 
-@router.post("/", response_model=IngredientSchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=IngredientSchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_token)],
+)
 def create_ingredient(ingredient_data: IngredientCreate):
     """Create a new ingredient."""
     with session() as db:
@@ -54,7 +60,11 @@ def create_ingredient(ingredient_data: IngredientCreate):
             )
 
 
-@router.put("/{ingredient_id}", response_model=IngredientSchema)
+@router.put(
+    "/{ingredient_id}",
+    response_model=IngredientSchema,
+    dependencies=[Depends(require_api_token)],
+)
 def update_ingredient(ingredient_id: int, ingredient_data: IngredientUpdate):
     """Update an existing ingredient."""
     with session() as db:
@@ -86,7 +96,11 @@ def update_ingredient(ingredient_id: int, ingredient_data: IngredientUpdate):
             )
 
 
-@router.delete("/{ingredient_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{ingredient_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_token)],
+)
 def delete_ingredient(ingredient_id: int):
     """Delete an ingredient."""
     with session() as db:

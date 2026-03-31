@@ -13,6 +13,7 @@ class ProductBase(APIModel):
     description: Optional[str] = None
     how_to_use: Optional[str] = None
     image_url: Optional[str] = None
+    additional_image_urls: Optional[List[str]] = None
     volume_ml: Optional[int] = None
     brand_id: Optional[int] = None
     category_id: Optional[int] = None

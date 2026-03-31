@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
 from db import Concern
 from db.session import session
+from ..auth import require_api_token
 from ..schemas.concern import ConcernCreate, ConcernUpdate, ConcernSchema
 
 router = APIRouter(prefix="/concerns", tags=["Concerns"])
@@ -31,7 +32,12 @@ def get_concern(concern_id: int):
         return concern
 
 
-@router.post("/", response_model=ConcernSchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=ConcernSchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_token)],
+)
 def create_concern(concern_data: ConcernCreate):
     """Create a new concern."""
     with session() as db:
@@ -47,7 +53,11 @@ def create_concern(concern_data: ConcernCreate):
             )
 
 
-@router.put("/{concern_id}", response_model=ConcernSchema)
+@router.put(
+    "/{concern_id}",
+    response_model=ConcernSchema,
+    dependencies=[Depends(require_api_token)],
+)
 def update_concern(concern_id: int, concern_data: ConcernUpdate):
     """Update an existing concern."""
     with session() as db:
@@ -69,7 +79,11 @@ def update_concern(concern_id: int, concern_data: ConcernUpdate):
             )
 
 
-@router.delete("/{concern_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{concern_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_token)],
+)
 def delete_concern(concern_id: int):
     """Delete a concern."""
     with session() as db:

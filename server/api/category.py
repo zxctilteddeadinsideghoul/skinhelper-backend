@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
 from db import Category
 from db.session import session
+from ..auth import require_api_token
 from ..schemas.category import CategoryCreate, CategoryUpdate, CategorySchema
 
 router = APIRouter(prefix="/categories", tags=["Categories"])
@@ -31,7 +32,12 @@ def get_category(category_id: int):
         return category
 
 
-@router.post("/", response_model=CategorySchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=CategorySchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_token)],
+)
 def create_category(category_data: CategoryCreate):
     """Create a new category."""
     with session() as db:
@@ -47,7 +53,11 @@ def create_category(category_data: CategoryCreate):
             )
 
 
-@router.put("/{category_id}", response_model=CategorySchema)
+@router.put(
+    "/{category_id}",
+    response_model=CategorySchema,
+    dependencies=[Depends(require_api_token)],
+)
 def update_category(category_id: int, category_data: CategoryUpdate):
     """Update an existing category."""
     with session() as db:
@@ -69,7 +79,11 @@ def update_category(category_id: int, category_data: CategoryUpdate):
             )
 
 
-@router.delete("/{category_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{category_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_token)],
+)
 def delete_category(category_id: int):
     """Delete a category."""
     with session() as db:

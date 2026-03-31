@@ -5,8 +5,7 @@ from alembic import context
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 from db import DeclBase
-from db.config import config as app_config
-from db.connection import get_engine, start_db_connections
+from db.connection import get_database_url, get_engine, start_db_connections
 
 
 config = context.config
@@ -21,7 +20,6 @@ if config.config_file_name is not None:
 # from myapp import mymodel
 # target_metadata = mymodel.Base.metadata
 target_metadata = DeclBase.metadata
-DB_URL = "postgresql://postgres:nF8da6ku7zih!@localhost:5464/skinhelper"
 
 
 # other values from the config, defined by the needs of env.py,
@@ -43,7 +41,7 @@ def run_migrations_offline() -> None:
 
     """
     context.configure(
-        url=DB_URL,
+        url=get_database_url(),
         target_metadata=target_metadata,
         literal_binds=True,
         dialect_opts={"paramstyle": "named"},

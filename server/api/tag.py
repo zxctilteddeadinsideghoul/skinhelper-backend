@@ -1,10 +1,11 @@
 from typing import List
 
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.exc import IntegrityError
 
 from db import Tag
 from db.session import session
+from ..auth import require_api_token
 from ..schemas.tag import TagCreate, TagUpdate, TagSchema
 
 router = APIRouter(prefix="/tags", tags=["Tags"])
@@ -31,7 +32,12 @@ def get_tag(tag_id: int):
         return tag
 
 
-@router.post("/", response_model=TagSchema, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/",
+    response_model=TagSchema,
+    status_code=status.HTTP_201_CREATED,
+    dependencies=[Depends(require_api_token)],
+)
 def create_tag(tag_data: TagCreate):
     """Create a new tag."""
     with session() as db:
@@ -47,7 +53,11 @@ def create_tag(tag_data: TagCreate):
             )
 
 
-@router.put("/{tag_id}", response_model=TagSchema)
+@router.put(
+    "/{tag_id}",
+    response_model=TagSchema,
+    dependencies=[Depends(require_api_token)],
+)
 def update_tag(tag_id: int, tag_data: TagUpdate):
     """Update an existing tag."""
     with session() as db:
@@ -69,7 +79,11 @@ def update_tag(tag_id: int, tag_data: TagUpdate):
             )
 
 
-@router.delete("/{tag_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete(
+    "/{tag_id}",
+    status_code=status.HTTP_204_NO_CONTENT,
+    dependencies=[Depends(require_api_token)],
+)
 def delete_tag(tag_id: int):
     """Delete a tag."""
     with session() as db:

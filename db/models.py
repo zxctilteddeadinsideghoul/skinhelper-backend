@@ -1,5 +1,6 @@
 import sqlalchemy as sa
 from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlalchemy.dialects.postgresql import ARRAY
 from typing import List
 
 from db import DeclBase
@@ -123,6 +124,10 @@ class Product(DeclBase):
     description: Mapped[str] = mapped_column(sa.Text, nullable=True)
     how_to_use: Mapped[str] = mapped_column(sa.Text, nullable=True)
     image_url: Mapped[str] = mapped_column(sa.String(300), nullable=True)
+    additional_image_urls: Mapped[List[str] | None] = mapped_column(
+        ARRAY(sa.Text),
+        nullable=True,
+    )
     volume_ml: Mapped[int] = mapped_column(sa.Integer, nullable=True)
 
     brand_id: Mapped[int] = mapped_column(sa.ForeignKey("brands.id"), nullable=True)
