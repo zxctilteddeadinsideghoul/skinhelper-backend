@@ -121,6 +121,7 @@ class Product(DeclBase):
 
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(200), nullable=False)
+    barcode: Mapped[str | None] = mapped_column(sa.String(255), nullable=True)
     description: Mapped[str] = mapped_column(sa.Text, nullable=True)
     how_to_use: Mapped[str] = mapped_column(sa.Text, nullable=True)
     image_url: Mapped[str] = mapped_column(sa.String(300), nullable=True)

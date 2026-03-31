@@ -10,6 +10,7 @@ from .tag import TagSchema
 
 class ProductBase(APIModel):
     name: str
+    barcode: Optional[str] = None
     description: Optional[str] = None
     how_to_use: Optional[str] = None
     image_url: Optional[str] = None

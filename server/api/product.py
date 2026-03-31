@@ -1,8 +1,9 @@
 from typing import Any, List, Optional, Type
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+import sqlalchemy as sa
 from sqlalchemy.exc import IntegrityError
-from sqlalchemy.orm import joinedload, selectinload, Session
+from sqlalchemy.orm import selectinload, Session
 
 from db import Product, Brand, Category, Ingredient, SkinType, Concern, Tag
 from db.session import session
@@ -35,8 +36,25 @@ def _assign_m2m(
         raise HTTPException(
             status_code=400,
             detail=f"Some {attr_name} not found: {sorted(missing)}",
-        )
+    )
     setattr(product_instance, attr_name, objs)
+
+
+def _normalize_barcode(barcode: str) -> str:
+    return barcode.replace("_", "")
+
+
+def _apply_barcode_filter(query: Any, barcode: str, normalized: bool = False) -> Any:
+    if not normalized:
+        return query.filter(Product.barcode == barcode)
+
+    normalized_barcode = _normalize_barcode(barcode)
+    normalized_column = sa.func.replace(sa.func.coalesce(Product.barcode, ""), "_", "")
+    return query.filter(normalized_column == normalized_barcode)
+
+
+def _query_has_results(query: Any) -> bool:
+    return query.limit(1).all() != []
 
 
 @router.get("/all", response_model=List[ProductShort])
@@ -47,6 +65,7 @@ def get_all_products(
 
     # Unified search parameter
     search: Optional[str] = Query(None, description="Universal search across product name, brand name, category name, and ingredient names (case-insensitive partial match)"),
+    barcode: Optional[str] = Query(None, description="Search by barcode: exact match first, then normalized match with '_' removed if exact match is not found"),
 
     # Category filters
     category_id: Optional[int] = Query(None, description="Filter by category ID"),
@@ -114,10 +133,17 @@ def get_all_products(
         if ingredient_ids:
             query = query.join(Product.ingredients).filter(Ingredient.id.in_(ingredient_ids))
         query = query.order_by(Product.id)
-        
+
         if any([skin_type_ids, concern_ids, tag_ids, ingredient_ids]):
             query = query.distinct(Product.id)
-        
+
+        if barcode:
+            exact_query = _apply_barcode_filter(query, barcode, normalized=False)
+            if _query_has_results(exact_query):
+                query = exact_query
+            else:
+                query = _apply_barcode_filter(query, barcode, normalized=True)
+
         if limit:
             query = query.offset(skip).limit(limit)
         else:
@@ -125,9 +151,6 @@ def get_all_products(
 
         products = query.all()
         return products
-
-from fastapi import HTTPException
-from sqlalchemy.orm import selectinload
 
 @router.get("/{product_id}", response_model=ProductDetailed)
 def get_product_detailed(product_id: int):
