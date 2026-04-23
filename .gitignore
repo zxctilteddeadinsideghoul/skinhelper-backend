@@ -62,10 +62,9 @@ uvicorn.log
 .env.test
 
 # === Alembic (миграции БД) ===
-# сохраняем папку alembic/ но игнорируем кэш и временные файлы
+# сохраняем папку alembic/versions с ревизиями, игнорируем только кэш
 alembic/__pycache__/
 alembic/versions/__pycache__/
-alembic/versions/
 
 # === MyPy / Type Checking ===
 .mypy_cache/
