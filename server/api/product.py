@@ -102,24 +102,28 @@ def get_all_products(
         )
 
         if search:
+            search_pattern = sa.func.concat("%", sa.literal(search), "%")
             search_filter = (
-                Product.name.ilike(f"%{search}%") |
-                Brand.name.ilike(f"%{search}%") |
-                Category.name.ilike(f"%{search}%") |
-                Ingredient.name.ilike(f"%{search}%")
+                Product.name.ilike(search_pattern) |
+                Brand.name.ilike(search_pattern) |
+                Category.name.ilike(search_pattern) |
+                Ingredient.name.ilike(search_pattern)
             )
             query = query.outerjoin(Product.brand).outerjoin(Product.category).outerjoin(Product.ingredients).filter(search_filter)
 
         elif name or brand:
             if name:
-                query = query.filter(Product.name.ilike(f"%{name}%"))
+                name_pattern = sa.func.concat("%", sa.literal(name), "%")
+                query = query.filter(Product.name.ilike(name_pattern))
             if brand:
-                query = query.join(Product.brand).filter(Brand.name.ilike(f"%{brand}%"))
+                brand_pattern = sa.func.concat("%", sa.literal(brand), "%")
+                query = query.join(Product.brand).filter(Brand.name.ilike(brand_pattern))
 
         if category_id:
             query = query.filter(Product.category_id == category_id)
         elif category:
-            query = query.join(Product.category).filter(Category.name.ilike(f"%{category}%"))
+            category_pattern = sa.func.concat("%", sa.literal(category), "%")
+            query = query.join(Product.category).filter(Category.name.ilike(category_pattern))
 
         if skin_type_ids:
             query = query.join(Product.suitable_for_skin_types).filter(SkinType.id.in_(skin_type_ids))
