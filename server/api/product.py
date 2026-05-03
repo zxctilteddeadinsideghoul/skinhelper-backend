@@ -101,6 +101,9 @@ def get_all_products(
             selectinload(Product.category),
         )
 
+        # Track which relationships were already joined to avoid duplicate joins
+        joined = set()
+
         if search:
             search_pattern = sa.func.concat("%", sa.literal(search), "%")
             search_filter = (
@@ -110,6 +113,7 @@ def get_all_products(
                 Ingredient.name.ilike(search_pattern)
             )
             query = query.outerjoin(Product.brand).outerjoin(Product.category).outerjoin(Product.ingredients).filter(search_filter)
+            joined.update({"brand", "category", "ingredients"})
 
         elif name or brand:
             if name:
@@ -118,12 +122,15 @@ def get_all_products(
             if brand:
                 brand_pattern = sa.func.concat("%", sa.literal(brand), "%")
                 query = query.join(Product.brand).filter(Brand.name.ilike(brand_pattern))
+                joined.add("brand")
 
         if category_id:
             query = query.filter(Product.category_id == category_id)
         elif category:
             category_pattern = sa.func.concat("%", sa.literal(category), "%")
-            query = query.join(Product.category).filter(Category.name.ilike(category_pattern))
+            if "category" not in joined:
+                query = query.join(Product.category)
+            query = query.filter(Category.name.ilike(category_pattern))
 
         if skin_type_ids:
             query = query.join(Product.suitable_for_skin_types).filter(SkinType.id.in_(skin_type_ids))
@@ -135,7 +142,9 @@ def get_all_products(
             query = query.join(Product.tags).filter(Tag.id.in_(tag_ids))
 
         if ingredient_ids:
-            query = query.join(Product.ingredients).filter(Ingredient.id.in_(ingredient_ids))
+            if "ingredients" not in joined:
+                query = query.join(Product.ingredients)
+            query = query.filter(Ingredient.id.in_(ingredient_ids))
         query = query.order_by(Product.id)
 
         if any([skin_type_ids, concern_ids, tag_ids, ingredient_ids]):
