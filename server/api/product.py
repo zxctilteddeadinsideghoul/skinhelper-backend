@@ -182,46 +182,43 @@ def get_product_detailed(product_id: int):
     dependencies=[Depends(require_api_token)],
 )
 def create_product(product_in: ProductCreate) -> ProductShort:
-    with session() as s:
-        if product_in.brand_id:
-            _ensure_exists(s, Brand, product_in.brand_id, "Brand")
+    try:
+        with session() as s:
+            if product_in.brand_id:
+                _ensure_exists(s, Brand, product_in.brand_id, "Brand")
 
-        if product_in.category_id:
-            _ensure_exists(s, Category, product_in.category_id, "Category")
+            if product_in.category_id:
+                _ensure_exists(s, Category, product_in.category_id, "Category")
 
-        product_data = product_in.model_dump(
-            exclude={"ingredient_ids", "skin_type_ids", "concern_ids", "tag_ids"}
-        )
-        product = Product(**product_data)
-        s.add(product)
-        s.flush()
+            product_data = product_in.model_dump(
+                exclude={"ingredient_ids", "skin_type_ids", "concern_ids", "tag_ids"}
+            )
+            product = Product(**product_data)
+            s.add(product)
+            s.flush()
 
-        _assign_m2m(s, product, "ingredients", Ingredient, product_in.ingredient_ids)
-        _assign_m2m(
-            s, product, "suitable_for_skin_types", SkinType, product_in.skin_type_ids
-        )
-        _assign_m2m(s, product, "targets_concerns", Concern, product_in.concern_ids)
-        _assign_m2m(s, product, "tags", Tag, product_in.tag_ids)
+            _assign_m2m(s, product, "ingredients", Ingredient, product_in.ingredient_ids)
+            _assign_m2m(
+                s, product, "suitable_for_skin_types", SkinType, product_in.skin_type_ids
+            )
+            _assign_m2m(s, product, "targets_concerns", Concern, product_in.concern_ids)
+            _assign_m2m(s, product, "tags", Tag, product_in.tag_ids)
 
-        try:
-            s.commit()
-        except IntegrityError:
-            s.rollback()
-            raise HTTPException(
-                status_code=400, detail="Product with this name already exists"
+            product = (
+                s.query(Product)
+                .options(
+                    selectinload(Product.brand),
+                    selectinload(Product.category),
+                )
+                .filter(Product.id == product.id)
+                .one()
             )
 
-        product = (
-            s.query(Product)
-            .options(
-                selectinload(Product.brand),
-                selectinload(Product.category),
-            )
-            .filter(Product.id == product.id)
-            .one()
+            return product
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400, detail="Product with this name already exists"
         )
-
-        return product
 
 
 @router.put(
@@ -230,49 +227,46 @@ def create_product(product_in: ProductCreate) -> ProductShort:
     dependencies=[Depends(require_api_token)],
 )
 def update_product(product_id: int, product_in: ProductUpdate):
-    with session() as s:
-        product = s.get(Product, product_id)
-        if not product:
-            raise HTTPException(status_code=404, detail="Product not found")
+    try:
+        with session() as s:
+            product = s.get(Product, product_id)
+            if not product:
+                raise HTTPException(status_code=404, detail="Product not found")
 
-        if product_in.brand_id is not None:
-            _ensure_exists(s, Brand, product_in.brand_id, "Brand")
+            if product_in.brand_id is not None:
+                _ensure_exists(s, Brand, product_in.brand_id, "Brand")
 
-        if product_in.category_id is not None:
-            _ensure_exists(s, Category, product_in.category_id, "Category")
+            if product_in.category_id is not None:
+                _ensure_exists(s, Category, product_in.category_id, "Category")
 
-        update_data = product_in.model_dump(exclude_unset=True, exclude={"ingredient_ids", "skin_type_ids", "concern_ids", "tag_ids"})
-        for field, value in update_data.items():
-            setattr(product, field, value)
+            update_data = product_in.model_dump(exclude_unset=True, exclude={"ingredient_ids", "skin_type_ids", "concern_ids", "tag_ids"})
+            for field, value in update_data.items():
+                setattr(product, field, value)
 
-        if product_in.ingredient_ids is not None:
-            _assign_m2m(s, product, "ingredients", Ingredient, product_in.ingredient_ids)
-        if product_in.skin_type_ids is not None:
-            _assign_m2m(s, product, "suitable_for_skin_types", SkinType, product_in.skin_type_ids)
-        if product_in.concern_ids is not None:
-            _assign_m2m(s, product, "targets_concerns", Concern, product_in.concern_ids)
-        if product_in.tag_ids is not None:
-            _assign_m2m(s, product, "tags", Tag, product_in.tag_ids)
+            if product_in.ingredient_ids is not None:
+                _assign_m2m(s, product, "ingredients", Ingredient, product_in.ingredient_ids)
+            if product_in.skin_type_ids is not None:
+                _assign_m2m(s, product, "suitable_for_skin_types", SkinType, product_in.skin_type_ids)
+            if product_in.concern_ids is not None:
+                _assign_m2m(s, product, "targets_concerns", Concern, product_in.concern_ids)
+            if product_in.tag_ids is not None:
+                _assign_m2m(s, product, "tags", Tag, product_in.tag_ids)
 
-        try:
-            s.commit()
-        except IntegrityError:
-            s.rollback()
-            raise HTTPException(
-                status_code=400, detail="Product with this name already exists"
+            product = (
+                s.query(Product)
+                .options(
+                    selectinload(Product.brand),
+                    selectinload(Product.category),
+                )
+                .filter(Product.id == product_id)
+                .one()
             )
 
-        product = (
-            s.query(Product)
-            .options(
-                selectinload(Product.brand),
-                selectinload(Product.category),
-            )
-            .filter(Product.id == product_id)
-            .one()
+            return product
+    except IntegrityError:
+        raise HTTPException(
+            status_code=400, detail="Product with this name already exists"
         )
-
-        return product
 
 
 @router.delete(

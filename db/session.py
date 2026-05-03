@@ -9,6 +9,7 @@ def session():
     try:
         yield _session
     except:
+        _session.rollback()
         raise
     else:
         _session.commit()
