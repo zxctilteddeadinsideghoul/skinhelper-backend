@@ -93,4 +93,11 @@ def delete_skin_type(skin_type_id: int):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Skin type not found"
             )
-        db.delete(skin_type)
+        try:
+            db.delete(skin_type)
+            db.flush()
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete skin type: it is still referenced by other records"
+            )

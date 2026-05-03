@@ -93,4 +93,11 @@ def delete_tag(tag_id: int):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Tag not found"
             )
-        db.delete(tag)
+        try:
+            db.delete(tag)
+            db.flush()
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete tag: it is still referenced by other records"
+            )

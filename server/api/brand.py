@@ -93,4 +93,11 @@ def delete_brand(brand_id: int):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Brand not found"
             )
-        db.delete(brand)
+        try:
+            db.delete(brand)
+            db.flush()
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete brand: it is still referenced by other records"
+            )

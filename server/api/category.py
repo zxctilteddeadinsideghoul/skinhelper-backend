@@ -93,4 +93,11 @@ def delete_category(category_id: int):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Category not found"
             )
-        db.delete(category)
+        try:
+            db.delete(category)
+            db.flush()
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete category: it is still referenced by other records"
+            )

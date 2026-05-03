@@ -42,7 +42,7 @@ class Brand(DeclBase):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100), unique=True, nullable=False)
 
-    products: Mapped[List["Product"]] = relationship("Product", back_populates="brand")
+    products: Mapped[List["Product"]] = relationship("Product", back_populates="brand", cascade="all, delete-orphan")
 
 
 class Category(DeclBase):
@@ -51,7 +51,7 @@ class Category(DeclBase):
     id: Mapped[int] = mapped_column(sa.Integer, primary_key=True)
     name: Mapped[str] = mapped_column(sa.String(100), unique=True, nullable=False)
 
-    products: Mapped[List["Product"]] = relationship("Product", back_populates="category")
+    products: Mapped[List["Product"]] = relationship("Product", back_populates="category", cascade="all, delete-orphan")
 
 
 class Ingredient(DeclBase):

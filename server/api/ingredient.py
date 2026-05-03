@@ -110,4 +110,11 @@ def delete_ingredient(ingredient_id: int):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Ingredient not found"
             )
-        db.delete(ingredient)
+        try:
+            db.delete(ingredient)
+            db.flush()
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete ingredient: it is still referenced by other records"
+            )

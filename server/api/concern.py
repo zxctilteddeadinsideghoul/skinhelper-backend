@@ -93,4 +93,11 @@ def delete_concern(concern_id: int):
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Concern not found"
             )
-        db.delete(concern)
+        try:
+            db.delete(concern)
+            db.flush()
+        except IntegrityError:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Cannot delete concern: it is still referenced by other records"
+            )
