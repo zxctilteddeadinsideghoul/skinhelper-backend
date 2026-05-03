@@ -40,17 +40,17 @@ def get_tag(tag_id: int):
 )
 def create_tag(tag_data: TagCreate):
     """Create a new tag."""
-    with session() as db:
-        try:
+    try:
+        with session() as db:
             new_tag = Tag(name=tag_data.name)
             db.add(new_tag)
             db.flush()
             return new_tag
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Tag name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tag name already exists"
+        )
 
 
 @router.put(
@@ -60,23 +60,22 @@ def create_tag(tag_data: TagCreate):
 )
 def update_tag(tag_id: int, tag_data: TagUpdate):
     """Update an existing tag."""
-    with session() as db:
-        tag = db.query(Tag).filter(Tag.id == tag_id).first()
-        if not tag:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tag not found"
-            )
-        
-        try:
+    try:
+        with session() as db:
+            tag = db.query(Tag).filter(Tag.id == tag_id).first()
+            if not tag:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Tag not found"
+                )
             tag.name = tag_data.name
             db.flush()
             return tag
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Tag name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tag name already exists"
+        )
 
 
 @router.delete(
@@ -86,18 +85,18 @@ def update_tag(tag_id: int, tag_data: TagUpdate):
 )
 def delete_tag(tag_id: int):
     """Delete a tag."""
-    with session() as db:
-        tag = db.query(Tag).filter(Tag.id == tag_id).first()
-        if not tag:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Tag not found"
-            )
-        try:
+    try:
+        with session() as db:
+            tag = db.query(Tag).filter(Tag.id == tag_id).first()
+            if not tag:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Tag not found"
+                )
             db.delete(tag)
             db.flush()
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Cannot delete tag: it is still referenced by other records"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete tag: it is still referenced by other records"
+        )

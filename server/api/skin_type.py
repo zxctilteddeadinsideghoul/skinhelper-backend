@@ -40,17 +40,17 @@ def get_skin_type(skin_type_id: int):
 )
 def create_skin_type(skin_type_data: SkinTypeCreate):
     """Create a new skin type."""
-    with session() as db:
-        try:
+    try:
+        with session() as db:
             new_skin_type = SkinType(name=skin_type_data.name)
             db.add(new_skin_type)
             db.flush()
             return new_skin_type
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Skin type name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Skin type name already exists"
+        )
 
 
 @router.put(
@@ -60,23 +60,22 @@ def create_skin_type(skin_type_data: SkinTypeCreate):
 )
 def update_skin_type(skin_type_id: int, skin_type_data: SkinTypeUpdate):
     """Update an existing skin type."""
-    with session() as db:
-        skin_type = db.query(SkinType).filter(SkinType.id == skin_type_id).first()
-        if not skin_type:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Skin type not found"
-            )
-        
-        try:
+    try:
+        with session() as db:
+            skin_type = db.query(SkinType).filter(SkinType.id == skin_type_id).first()
+            if not skin_type:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Skin type not found"
+                )
             skin_type.name = skin_type_data.name
             db.flush()
             return skin_type
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Skin type name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Skin type name already exists"
+        )
 
 
 @router.delete(
@@ -86,18 +85,18 @@ def update_skin_type(skin_type_id: int, skin_type_data: SkinTypeUpdate):
 )
 def delete_skin_type(skin_type_id: int):
     """Delete a skin type."""
-    with session() as db:
-        skin_type = db.query(SkinType).filter(SkinType.id == skin_type_id).first()
-        if not skin_type:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Skin type not found"
-            )
-        try:
+    try:
+        with session() as db:
+            skin_type = db.query(SkinType).filter(SkinType.id == skin_type_id).first()
+            if not skin_type:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Skin type not found"
+                )
             db.delete(skin_type)
             db.flush()
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Cannot delete skin type: it is still referenced by other records"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete skin type: it is still referenced by other records"
+        )

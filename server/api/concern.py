@@ -40,17 +40,17 @@ def get_concern(concern_id: int):
 )
 def create_concern(concern_data: ConcernCreate):
     """Create a new concern."""
-    with session() as db:
-        try:
+    try:
+        with session() as db:
             new_concern = Concern(name=concern_data.name)
             db.add(new_concern)
             db.flush()
             return new_concern
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Concern name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Concern name already exists"
+        )
 
 
 @router.put(
@@ -60,23 +60,22 @@ def create_concern(concern_data: ConcernCreate):
 )
 def update_concern(concern_id: int, concern_data: ConcernUpdate):
     """Update an existing concern."""
-    with session() as db:
-        concern = db.query(Concern).filter(Concern.id == concern_id).first()
-        if not concern:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Concern not found"
-            )
-        
-        try:
+    try:
+        with session() as db:
+            concern = db.query(Concern).filter(Concern.id == concern_id).first()
+            if not concern:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Concern not found"
+                )
             concern.name = concern_data.name
             db.flush()
             return concern
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Concern name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Concern name already exists"
+        )
 
 
 @router.delete(
@@ -86,18 +85,18 @@ def update_concern(concern_id: int, concern_data: ConcernUpdate):
 )
 def delete_concern(concern_id: int):
     """Delete a concern."""
-    with session() as db:
-        concern = db.query(Concern).filter(Concern.id == concern_id).first()
-        if not concern:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Concern not found"
-            )
-        try:
+    try:
+        with session() as db:
+            concern = db.query(Concern).filter(Concern.id == concern_id).first()
+            if not concern:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Concern not found"
+                )
             db.delete(concern)
             db.flush()
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Cannot delete concern: it is still referenced by other records"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete concern: it is still referenced by other records"
+        )

@@ -40,17 +40,17 @@ def get_brand(brand_id: int):
 )
 def create_brand(brand_data: BrandCreate):
     """Create a new brand."""
-    with session() as db:
-        try:
+    try:
+        with session() as db:
             new_brand = Brand(name=brand_data.name)
             db.add(new_brand)
             db.flush()
             return new_brand
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Brand name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Brand name already exists"
+        )
 
 
 @router.put(
@@ -60,23 +60,22 @@ def create_brand(brand_data: BrandCreate):
 )
 def update_brand(brand_id: int, brand_data: BrandUpdate):
     """Update an existing brand."""
-    with session() as db:
-        brand = db.query(Brand).filter(Brand.id == brand_id).first()
-        if not brand:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Brand not found"
-            )
-        
-        try:
+    try:
+        with session() as db:
+            brand = db.query(Brand).filter(Brand.id == brand_id).first()
+            if not brand:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Brand not found"
+                )
             brand.name = brand_data.name
             db.flush()
             return brand
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Brand name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Brand name already exists"
+        )
 
 
 @router.delete(
@@ -86,18 +85,18 @@ def update_brand(brand_id: int, brand_data: BrandUpdate):
 )
 def delete_brand(brand_id: int):
     """Delete a brand."""
-    with session() as db:
-        brand = db.query(Brand).filter(Brand.id == brand_id).first()
-        if not brand:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Brand not found"
-            )
-        try:
+    try:
+        with session() as db:
+            brand = db.query(Brand).filter(Brand.id == brand_id).first()
+            if not brand:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Brand not found"
+                )
             db.delete(brand)
             db.flush()
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Cannot delete brand: it is still referenced by other records"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete brand: it is still referenced by other records"
+        )

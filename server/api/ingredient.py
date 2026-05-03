@@ -40,8 +40,8 @@ def get_ingredient(ingredient_id: int):
 )
 def create_ingredient(ingredient_data: IngredientCreate):
     """Create a new ingredient."""
-    with session() as db:
-        try:
+    try:
+        with session() as db:
             new_ingredient = Ingredient(
                 name=ingredient_data.name,
                 purpose=ingredient_data.purpose,
@@ -53,11 +53,11 @@ def create_ingredient(ingredient_data: IngredientCreate):
             db.add(new_ingredient)
             db.flush()
             return new_ingredient
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Ingredient name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ingredient name already exists"
+        )
 
 
 @router.put(
@@ -67,15 +67,14 @@ def create_ingredient(ingredient_data: IngredientCreate):
 )
 def update_ingredient(ingredient_id: int, ingredient_data: IngredientUpdate):
     """Update an existing ingredient."""
-    with session() as db:
-        ingredient = db.query(Ingredient).filter(Ingredient.id == ingredient_id).first()
-        if not ingredient:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ingredient not found"
-            )
-        
-        try:
+    try:
+        with session() as db:
+            ingredient = db.query(Ingredient).filter(Ingredient.id == ingredient_id).first()
+            if not ingredient:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Ingredient not found"
+                )
             if ingredient_data.name is not None:
                 ingredient.name = ingredient_data.name
             if ingredient_data.purpose is not None:
@@ -89,11 +88,11 @@ def update_ingredient(ingredient_id: int, ingredient_data: IngredientUpdate):
                 ingredient.allergenicity = ingredient_data.allergenicity
             db.flush()
             return ingredient
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Ingredient name already exists"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ingredient name already exists"
+        )
 
 
 @router.delete(
@@ -103,18 +102,18 @@ def update_ingredient(ingredient_id: int, ingredient_data: IngredientUpdate):
 )
 def delete_ingredient(ingredient_id: int):
     """Delete an ingredient."""
-    with session() as db:
-        ingredient = db.query(Ingredient).filter(Ingredient.id == ingredient_id).first()
-        if not ingredient:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Ingredient not found"
-            )
-        try:
+    try:
+        with session() as db:
+            ingredient = db.query(Ingredient).filter(Ingredient.id == ingredient_id).first()
+            if not ingredient:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Ingredient not found"
+                )
             db.delete(ingredient)
             db.flush()
-        except IntegrityError:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Cannot delete ingredient: it is still referenced by other records"
-            )
+    except IntegrityError:
+        raise HTTPException(
+            status_code=status.HTTP_409_CONFLICT,
+            detail="Cannot delete ingredient: it is still referenced by other records"
+        )
