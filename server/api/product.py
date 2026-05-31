@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload, Session
 from db import Product, Brand, Category, Ingredient, SkinType, Concern, Tag
 from db.session import session
 from ..auth import require_api_token
+from ..image_cache_events import publish_product_image_cache_request
 from ..schemas.product import ProductCreate, ProductUpdate, ProductShort, ProductDetailed
 
 router = APIRouter(prefix="/products", tags=["Products"])
@@ -227,7 +228,10 @@ def create_product(product_in: ProductCreate) -> ProductShort:
                 .one()
             )
 
-            return product
+            product_result = product
+
+        publish_product_image_cache_request(product_result)
+        return product_result
     except IntegrityError:
         raise HTTPException(
             status_code=400, detail="Product with this name already exists"
@@ -275,7 +279,10 @@ def update_product(product_id: int, product_in: ProductUpdate):
                 .one()
             )
 
-            return product
+            product_result = product
+
+        publish_product_image_cache_request(product_result)
+        return product_result
     except IntegrityError:
         raise HTTPException(
             status_code=400, detail="Product with this name already exists"

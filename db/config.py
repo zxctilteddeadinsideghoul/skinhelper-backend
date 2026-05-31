@@ -11,6 +11,14 @@ class Config(BaseSettings):
 
     ECHO: bool = False
     API_TOKEN: SecretStr
+    KAFKA_BOOTSTRAP_SERVERS: str = "kafka:9092"
+    KAFKA_IMAGE_CACHE_TOPIC: str = "product.image.cache.requests"
+    KAFKA_IMAGE_CACHE_GROUP: str = "skinhelper-image-cache-worker"
+    KAFKA_PRODUCER_MAX_BLOCK_MS: int = 1000
+    KAFKA_PRODUCER_FLUSH_TIMEOUT: float = 1.0
+    IMAGESERVICE_INTERNAL_URL: str = "http://imageservice:8080"
+    IMAGES_PUBLIC_URL: str = "http://localhost"
+    IMAGE_CACHE_REQUEST_TIMEOUT_SECONDS: float = 20.0
 
     class Config:
         env_file = ".env"
