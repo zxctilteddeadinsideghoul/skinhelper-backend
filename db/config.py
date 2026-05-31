@@ -19,6 +19,8 @@ class Config(BaseSettings):
     IMAGESERVICE_INTERNAL_URL: str = "http://imageservice:8080"
     IMAGES_PUBLIC_URL: str = "http://localhost"
     IMAGE_CACHE_REQUEST_TIMEOUT_SECONDS: float = 20.0
+    REDIS_URL: str = "redis://localhost:6379/0"
+    PRODUCT_CARD_CACHE_TTL_SECONDS: int = 300
 
     class Config:
         env_file = ".env"

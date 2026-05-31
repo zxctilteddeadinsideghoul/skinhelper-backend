@@ -41,11 +41,14 @@ class ProductDeleteTests(unittest.TestCase):
         def fake_session_manager():
             yield fake_session
 
-        with patch("server.api.product.session", fake_session_manager):
+        with patch("server.api.product.session", fake_session_manager), patch(
+            "server.api.product.invalidate_product_card"
+        ) as invalidate_product_card_mock:
             result = delete_product(1)
 
         self.assertIsNone(result)
         self.assertIs(fake_session.deleted, product)
+        invalidate_product_card_mock.assert_called_once_with(1)
 
     def test_delete_product_raises_404_for_missing_product(self) -> None:
         fake_session = _FakeSession(None)
@@ -54,13 +57,16 @@ class ProductDeleteTests(unittest.TestCase):
         def fake_session_manager():
             yield fake_session
 
-        with patch("server.api.product.session", fake_session_manager):
+        with patch("server.api.product.session", fake_session_manager), patch(
+            "server.api.product.invalidate_product_card"
+        ) as invalidate_product_card_mock:
             with self.assertRaises(HTTPException) as exc:
                 delete_product(999)
 
         self.assertEqual(exc.exception.status_code, 404)
         self.assertEqual(exc.exception.detail, "Product not found")
         self.assertIsNone(fake_session.deleted)
+        invalidate_product_card_mock.assert_not_called()
 
 
 if __name__ == "__main__":

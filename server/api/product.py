@@ -8,6 +8,7 @@ from sqlalchemy.orm import selectinload, Session
 from db import Product, Brand, Category, Ingredient, SkinType, Concern, Tag
 from db.session import session
 from ..auth import require_api_token
+from ..cache import get_product_card, invalidate_product_card, set_product_card
 from ..image_cache_events import publish_product_image_cache_request
 from ..schemas.product import ProductCreate, ProductUpdate, ProductShort, ProductDetailed
 
@@ -168,6 +169,10 @@ def get_all_products(
 
 @router.get("/{product_id}", response_model=ProductDetailed)
 def get_product_detailed(product_id: int):
+    cached_product = get_product_card(product_id)
+    if cached_product is not None:
+        return cached_product
+
     with session() as s:
         product = (
             s.query(Product)
@@ -186,7 +191,9 @@ def get_product_detailed(product_id: int):
         if not product:
             raise HTTPException(status_code=404, detail="Product not found")
 
-        return product
+        product_payload = ProductDetailed.model_validate(product).model_dump(mode="json")
+        set_product_card(product_id, product_payload)
+        return product_payload
 
 
 @router.post(
@@ -281,6 +288,7 @@ def update_product(product_id: int, product_in: ProductUpdate):
 
             product_result = product
 
+        invalidate_product_card(product_id)
         publish_product_image_cache_request(product_result)
         return product_result
     except IntegrityError:
@@ -301,3 +309,5 @@ def delete_product(product_id: int):
             raise HTTPException(status_code=404, detail="Product not found")
 
         s.delete(product)
+
+    invalidate_product_card(product_id)

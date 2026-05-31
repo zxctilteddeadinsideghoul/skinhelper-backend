@@ -53,7 +53,7 @@ class ImageCacheWorkerTests(unittest.TestCase):
         with patch("server.image_cache_worker.session", fake_session_manager), patch(
             "server.image_cache_worker._cache_image_url",
             side_effect=lambda url: f"cached:{url}",
-        ):
+        ), patch("server.image_cache_worker.invalidate_product_card") as invalidate_product_card_mock:
             process_image_cache_event(
                 {
                     "product_id": 1,
@@ -64,6 +64,7 @@ class ImageCacheWorkerTests(unittest.TestCase):
 
         self.assertEqual(product.image_url, "cached:https://example.com/main.jpg")
         self.assertEqual(product.additional_image_urls, ["cached:https://example.com/extra.jpg"])
+        invalidate_product_card_mock.assert_called_once_with(1)
 
 
 if __name__ == "__main__":

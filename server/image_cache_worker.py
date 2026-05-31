@@ -9,6 +9,7 @@ from db import Product
 from db.config import config
 from db.connection import start_db_connections, stop_db_connections
 from db.session import session
+from .cache import close_redis_connection, invalidate_product_card
 
 logger = logging.getLogger(__name__)
 
@@ -84,6 +85,8 @@ def process_image_cache_event(event: dict) -> None:
                 if url
             ]
 
+    invalidate_product_card(product_id)
+
 
 def run() -> None:
     logging.basicConfig(level=logging.INFO)
@@ -112,6 +115,7 @@ def run() -> None:
             consumer.commit()
     finally:
         consumer.close()
+        close_redis_connection()
         stop_db_connections()
 
 

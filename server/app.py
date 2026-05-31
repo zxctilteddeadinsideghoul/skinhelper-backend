@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from fastapi import FastAPI
 
 from db.connection import start_db_connections, stop_db_connections
+from .cache import close_redis_connection
 from .api import (
     product_router,
     brand_router,
@@ -30,4 +31,5 @@ def startup_event():
 
 @app.on_event('shutdown')
 def shutdown_event():
+    close_redis_connection()
     stop_db_connections()
